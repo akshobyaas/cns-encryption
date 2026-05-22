@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNS Cryptography Toolkit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root { --accent: #0d6efd; }
+        body { min-height: 100vh; }
+        .hero { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+        .card { border: 1px solid rgba(255,255,255,.08); }
+        .output-box { background: #0d1117; border: 1px solid #30363d; border-radius: .5rem;
+                      padding: 1rem; font-family: 'Courier New', monospace; font-size: .85rem;
+                      min-height: 80px; white-space: pre-wrap; word-break: break-all; }
+        .stat-card { text-align: center; padding: 1.2rem; }
+        .stat-card .value { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+        .stat-card .label { font-size: .8rem; opacity: .7; }
+        .nav-pills .nav-link.active { background: var(--accent); }
+        textarea { font-family: 'Courier New', monospace !important; }
+        .toast-container { z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="appToast" class="toast" role="alert">
+        <div class="toast-header">
+            <i class="bi bi-shield-lock-fill me-2 text-primary"></i>
+            <strong class="me-auto">CNS Toolkit</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastBody"></div>
+    </div>
+</div>
+
+<!-- Header -->
+<header class="hero py-4 mb-4 shadow">
+    <div class="container">
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-shield-lock-fill fs-1 text-primary"></i>
+            <div>
+                <h1 class="h3 mb-0 fw-bold">Cryptography &amp; Network Security</h1>
+                <small class="text-secondary">AES-256 &amp; DES | Symmetric-Key Encryption Toolkit</small>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<div class="container pb-5">
+    <ul class="nav nav-pills mb-4" id="mainTabs" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tab-text"><i class="bi bi-chat-text me-1"></i>Text</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-file"><i class="bi bi-file-earmark-lock me-1"></i>File</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-keys"><i class="bi bi-key me-1"></i>Keys</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-analysis"><i class="bi bi-speedometer2 me-1"></i>Analysis</a></li>
+    </ul>
+
+    <div class="tab-content">
+
+        <!-- TEXT TAB -->
+        <div class="tab-pane fade show active" id="tab-text">
+            <div class="card p-4">
+                <h5 class="mb-3"><i class="bi bi-lock me-2"></i>Text Encryption / Decryption</h5>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-2">
+                        <label class="form-label">Algorithm</label>
+                        <select id="textAlgo" class="form-select">
+                            <option value="AES" selected>AES-256</option>
+                            <option value="DES">DES</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Key (hex)</label>
+                        <input type="text" id="textKey" class="form-control font-monospace" placeholder="Paste hex key or generate one">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-outline-primary w-100" onclick="genTextKey()"><i class="bi bi-arrow-repeat"></i> Gen Key</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Input</label>
+                    <textarea id="textInput" class="form-control" rows="5" placeholder="Enter plaintext to encrypt, or ciphertext (hex) to decrypt..."></textarea>
+                </div>
+                <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-primary" onclick="encryptText()"><i class="bi bi-lock-fill me-1"></i>Encrypt</button>
+                    <button class="btn btn-success" onclick="decryptText()"><i class="bi bi-unlock-fill me-1"></i>Decrypt</button>
+                    <button class="btn btn-outline-secondary ms-auto" onclick="clearText()"><i class="bi bi-x-circle"></i> Clear</button>
+                </div>
+                <label class="form-label">Output</label>
+                <div class="output-box" id="textOutput">Results will appear here...</div>
+                <div id="textMeta" class="mt-2 small text-secondary"></div>
+            </div>
+        </div>
+
+        <!-- FILE TAB -->
+        <div class="tab-pane fade" id="tab-file">
+            <div class="card p-4">
+                <h5 class="mb-3"><i class="bi bi-file-earmark-lock me-2"></i>File Encryption / Decryption</h5>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-2">
+                        <label class="form-label">Algorithm</label>
+                        <select id="fileAlgo" class="form-select">
+                            <option value="AES" selected>AES-256</option>
+                            <option value="DES">DES</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Key (hex)</label>
+                        <input type="text" id="fileKey" class="form-control font-monospace" placeholder="Paste hex key">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-outline-primary w-100" onclick="genFileKey()"><i class="bi bi-arrow-repeat"></i> Gen Key</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Select File</label>
+                    <input type="file" id="fileInput" class="form-control">
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" onclick="encryptFile()"><i class="bi bi-lock-fill me-1"></i>Encrypt File</button>
+                    <button class="btn btn-success" onclick="decryptFile()"><i class="bi bi-unlock-fill me-1"></i>Decrypt File</button>
+                </div>
+                <div id="fileMeta" class="mt-3 small text-secondary"></div>
+            </div>
+        </div>
+
+        <!-- KEYS TAB -->
+        <div class="tab-pane fade" id="tab-keys">
+            <div class="card p-4">
+                <h5 class="mb-3"><i class="bi bi-key-fill me-2"></i>Key Generation</h5>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Algorithm</label>
+                        <select id="keyAlgo" class="form-select">
+                            <option value="AES" selected>AES-256</option>
+                            <option value="DES">DES</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Password (optional, for PBKDF2)</label>
+                        <input type="password" id="keyPassword" class="form-control" placeholder="Leave empty for random key">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="generateKey()"><i class="bi bi-gear me-1"></i>Generate</button>
+                    </div>
+                </div>
+                <label class="form-label">Generated Key</label>
+                <div class="output-box" id="keyOutput">Click Generate to create a key...</div>
+            </div>
+        </div>
+
+        <!-- ANALYSIS TAB -->
+        <div class="tab-pane fade" id="tab-analysis">
+            <div class="card p-4">
+                <h5 class="mb-3"><i class="bi bi-speedometer2 me-2"></i>Comparative Analysis: AES-256 vs DES</h5>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Sample Text</label>
+                        <textarea id="analysisSample" class="form-control" rows="3">Cryptography and Network Security course project. This sample text is used to benchmark AES-256 against DES for comparative study.</textarea>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Iterations</label>
+                        <input type="number" id="analysisIter" class="form-control" value="100" min="10" max="500">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="runAnalysis()" id="btnAnalysis"><i class="bi bi-play-fill me-1"></i>Run</button>
+                    </div>
+                </div>
+
+                <div id="analysisResults" class="d-none">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3"><div class="card stat-card"><div class="value" id="aesEncMs">-</div><div class="label">AES Encrypt (ms)</div></div></div>
+                        <div class="col-md-3"><div class="card stat-card"><div class="value" id="aesDecMs">-</div><div class="label">AES Decrypt (ms)</div></div></div>
+                        <div class="col-md-3"><div class="card stat-card"><div class="value" id="desEncMs">-</div><div class="label">DES Encrypt (ms)</div></div></div>
+                        <div class="col-md-3"><div class="card stat-card"><div class="value" id="desDecMs">-</div><div class="label">DES Decrypt (ms)</div></div></div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead><tr><th>Metric</th><th>AES-256</th><th>DES</th><th>Winner</th></tr></thead>
+                            <tbody id="analysisTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-info mt-3" id="analysisConclusion"></div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /tab-content -->
+</div>
+
+<!-- Footer -->
+<footer class="text-center py-3 text-secondary small border-top mt-auto">
+    CNS 6th Semester &mdash; Symmetric-Key Cryptography Project &mdash; Built with Flask + pycryptodome
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ============ Utility ============
+function toast(msg) {
+    document.getElementById('toastBody').textContent = msg;
+    const t = new bootstrap.Toast(document.getElementById('appToast'));
+    t.show();
+}
+
+async function post(url, body) {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    return res.json();
+}
+
+// ============ Text Tab ============
+async function genTextKey() {
+    const algo = document.getElementById('textAlgo').value;
+    const data = await post('/api/generate-key', { algorithm: algo });
+    document.getElementById('textKey').value = data.key_hex;
+    toast(`${algo} key generated (${data.bits}-bit)`);
+}
+
+async function encryptText() {
+    const algo = document.getElementById('textAlgo').value;
+    const key = document.getElementById('textKey').value.trim();
+    const plaintext = document.getElementById('textInput').value;
+    if (!plaintext) { toast('Enter plaintext first.'); return; }
+    if (!key) { toast('Generate or paste a key first.'); return; }
+
+    const data = await post('/api/encrypt-text', { algorithm: algo, key_hex: key, plaintext });
+    if (data.error) { toast(data.error); return; }
+
+    document.getElementById('textOutput').textContent = data.ciphertext_hex;
+    document.getElementById('textMeta').innerHTML =
+        `<span class="badge bg-primary">${algo}</span> ` +
+        `Plaintext: ${data.plaintext_len} chars → Ciphertext: ${data.ciphertext_len} bytes | ` +
+        `Time: <strong>${data.time_ms} ms</strong>`;
+    toast('Encryption successful!');
+}
+
+async function decryptText() {
+    const algo = document.getElementById('textAlgo').value;
+    const key = document.getElementById('textKey').value.trim();
+    const ciphertext_hex = document.getElementById('textInput').value.trim();
+    if (!ciphertext_hex) { toast('Enter ciphertext (hex) first.'); return; }
+    if (!key) { toast('Paste the key used for encryption.'); return; }
+
+    const data = await post('/api/decrypt-text', { algorithm: algo, key_hex: key, ciphertext_hex });
+    if (data.error) { toast(data.error); return; }
+
+    document.getElementById('textOutput').textContent = data.plaintext;
+    document.getElementById('textMeta').innerHTML =
+        `<span class="badge bg-success">${algo}</span> Decrypted in <strong>${data.time_ms} ms</strong>`;
+    toast('Decryption successful!');
+}
+
+function clearText() {
+    document.getElementById('textInput').value = '';
+    document.getElementById('textOutput').textContent = 'Results will appear here...';
+    document.getElementById('textMeta').innerHTML = '';
+}
+
+// ============ File Tab ============
+async function genFileKey() {
+    const algo = document.getElementById('fileAlgo').value;
+    const data = await post('/api/generate-key', { algorithm: algo });
+    document.getElementById('fileKey').value = data.key_hex;
+    toast(`${algo} file key generated`);
+}
+
+async function encryptFile() {
+    const file = document.getElementById('fileInput').files[0];
+    if (!file) { toast('Select a file first.'); return; }
+    const key = document.getElementById('fileKey').value.trim();
+    if (!key) { toast('Generate or paste a key.'); return; }
+    const algo = document.getElementById('fileAlgo').value;
+
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('key_hex', key);
+    fd.append('algorithm', algo);
+
+    const res = await fetch('/api/encrypt-file', { method: 'POST', body: fd });
+    if (!res.ok) { const e = await res.json(); toast(e.error); return; }
+
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = file.name + '.enc';
+    a.click();
+    document.getElementById('fileMeta').innerHTML =
+        `<span class="badge bg-primary">${algo}</span> Encrypted <strong>${file.name}</strong> (${file.size} bytes) → ${file.name}.enc`;
+    toast('File encrypted & downloaded!');
+}
+
+async function decryptFile() {
+    const file = document.getElementById('fileInput').files[0];
+    if (!file) { toast('Select an encrypted file.'); return; }
+    const key = document.getElementById('fileKey').value.trim();
+    if (!key) { toast('Paste the key used for encryption.'); return; }
+    const algo = document.getElementById('fileAlgo').value;
+
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('key_hex', key);
+    fd.append('algorithm', algo);
+
+    const res = await fetch('/api/decrypt-file', { method: 'POST', body: fd });
+    if (!res.ok) { const e = await res.json(); toast(e.error); return; }
+
+    const blob = await res.blob();
+    let name = file.name.endsWith('.enc') ? file.name.slice(0, -4) : 'decrypted_' + file.name;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    document.getElementById('fileMeta').innerHTML =
+        `<span class="badge bg-success">${algo}</span> Decrypted <strong>${file.name}</strong> → ${name}`;
+    toast('File decrypted & downloaded!');
+}
+
+// ============ Key Tab ============
+async function generateKey() {
+    const algo = document.getElementById('keyAlgo').value;
+    const pw = document.getElementById('keyPassword').value;
+    const data = await post('/api/generate-key', { algorithm: algo, password: pw });
+
+    let out = `Algorithm : ${data.algorithm}\n`;
+    out += `Key (hex) : ${data.key_hex}\n`;
+    out += `Key (b64) : ${data.key_b64}\n`;
+    out += `Key Size  : ${data.bits} bits\n`;
+    if (data.salt_hex) out += `Salt (hex): ${data.salt_hex}\nMethod    : PBKDF2-SHA256 (100,000 iterations)\n`;
+    else out += `Method    : Cryptographic Random (os.urandom)\n`;
+
+    document.getElementById('keyOutput').textContent = out;
+    toast(`${algo} key generated`);
+}
+
+// ============ Analysis Tab ============
+async function runAnalysis() {
+    const btn = document.getElementById('btnAnalysis');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Running...';
+
+    const sample = document.getElementById('analysisSample').value;
+    const iterations = parseInt(document.getElementById('analysisIter').value) || 100;
+
+    const data = await post('/api/analysis', { sample_text: sample, iterations });
+    btn.disabled = false; btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Run';
+
+    if (data.error) { toast(data.error); return; }
+
+    document.getElementById('analysisResults').classList.remove('d-none');
+    document.getElementById('aesEncMs').textContent = data.aes.encrypt_ms;
+    document.getElementById('aesDecMs').textContent = data.aes.decrypt_ms;
+    document.getElementById('desEncMs').textContent = data.des.encrypt_ms;
+    document.getElementById('desDecMs').textContent = data.des.decrypt_ms;
+
+    const rows = [
+        ['Key Size', `${data.aes.key_bits} bits`, `${data.des.key_bits} bits`, 'AES'],
+        ['Block Size', `${data.aes.block_bits} bits`, `${data.des.block_bits} bits`, 'AES'],
+        ['Encrypt Time', `${data.aes.encrypt_ms} ms`, `${data.des.encrypt_ms} ms`,
+            data.aes.encrypt_ms < data.des.encrypt_ms ? 'AES' : 'DES'],
+        ['Decrypt Time', `${data.aes.decrypt_ms} ms`, `${data.des.decrypt_ms} ms`,
+            data.aes.decrypt_ms < data.des.decrypt_ms ? 'AES' : 'DES'],
+        ['Ciphertext Size', `${data.aes.ciphertext_bytes} B`, `${data.des.ciphertext_bytes} B`, '-'],
+        ['Security', 'Unbreakable', 'Broken (brute-forceable)', 'AES'],
+        ['NIST Status', 'Approved', 'Deprecated', 'AES'],
+    ];
+    document.getElementById('analysisTable').innerHTML = rows.map(r =>
+        `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td><strong>${r[3]}</strong></td></tr>`
+    ).join('');
+
+    document.getElementById('analysisConclusion').innerHTML =
+        `<strong>Conclusion:</strong> AES-256 provides ${Math.pow(2, 200).toExponential(1)}× more possible keys than DES. ` +
+        `Even if DES shows marginally faster raw speed, its 56-bit key is brute-forceable in seconds on modern hardware. ` +
+        `<strong>Always use AES-256 for production.</strong>`;
+    toast('Analysis complete!');
+}
+</script>
+</body>
+</html>
