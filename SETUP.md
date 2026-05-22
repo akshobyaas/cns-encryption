@@ -11,7 +11,7 @@
 ## Step 1: Install Dependencies
 
 ```bash
-cd /home/pranav.aradhya/CNS
+cd encryption-toolkit
 pip install flask pycryptodome
 ```
 
